@@ -109,4 +109,4 @@ kubectl delete pod busybox-pod
 - You tested `Never`, `OnFailure`, and `Always` restart policies.  
 - You observed differences in **Pod Phase** and **Restart Count**.  
 - You inspected pod events, logs, and restart behavior.  
-```
+
