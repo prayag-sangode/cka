@@ -75,7 +75,15 @@ kubectl cluster-info --context kind-my-cluster
 kubectl cluster-info
 kubectl get nodes
 ```
-
+### **Cleanup**
+```
+kind delete cluster --name my-cluster
+docker ps -a
+kubectl config get-contexts
+kubectl config delete-context kind-my-cluster
+kubectl config delete-cluster kind-my-cluster
+kubectl config unset users.kind-my-cluster
+```
 
 ## Lab Verification
 - Docker is installed and running (`docker ps` works).  
