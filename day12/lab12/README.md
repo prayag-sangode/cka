@@ -15,17 +15,9 @@ kubectl get pod busybox-pod -o jsonpath='{.status.phase}'
 
 ---
 
-### **Step 2: Explore Restart Policies**
-Restart policies are defined in the pod spec:
-- **Always** → Restart container if it exits (default for Deployments).  
-- **OnFailure** → Restart only if container exits with non‑zero status.  
-- **Never** → Do not restart container.  
-
----
-
-### **Step 3: Test RestartPolicy = Never**
-Create manifest:
-```yaml
+### **Step 2: Create Pod with RestartPolicy = Never**
+```bash
+cat <<EOF > busybox-pod.yaml
 apiVersion: v1
 kind: Pod
 metadata:
@@ -36,10 +28,8 @@ spec:
     - name: busybox
       image: busybox
       command: ["sh", "-c", "exit 1"]
-```
+EOF
 
-Apply:
-```bash
 kubectl apply -f busybox-pod.yaml
 kubectl get pods
 kubectl get pod busybox-pod -o jsonpath='{.status.phase}'
@@ -49,16 +39,11 @@ Pod runs once, exits with error, **Phase = Failed**, **RestartCount = 0**.
 
 ---
 
-### **Step 4: Test RestartPolicy = OnFailure**
-Update manifest:
+### **Step 3: Change to RestartPolicy = OnFailure**
 ```bash
 sed -i 's/restartPolicy: Never/restartPolicy: OnFailure/' busybox-pod.yaml
 kubectl delete pod busybox-pod
 kubectl apply -f busybox-pod.yaml
-```
-
-Check:
-```bash
 kubectl get pods
 kubectl describe pod busybox-pod
 kubectl get pod busybox-pod -o jsonpath='{.status.phase}'
@@ -68,16 +53,11 @@ Pod restarts after non‑zero exit, **RestartCount increases**, Phase shows `Run
 
 ---
 
-### **Step 5: Test RestartPolicy = Always**
-Update manifest:
+### **Step 4: Change to RestartPolicy = Always**
 ```bash
 sed -i 's/restartPolicy: OnFailure/restartPolicy: Always/' busybox-pod.yaml
 kubectl delete pod busybox-pod
 kubectl apply -f busybox-pod.yaml
-```
-
-Check:
-```bash
 kubectl get pods
 kubectl describe pod busybox-pod
 ```
@@ -86,7 +66,7 @@ Pod restarts continuously, **RestartCount keeps climbing**, Phase = `Running`.
 
 ---
 
-### **Step 6: Inspect Pod Events & Status**
+### **Step 5: Inspect Pod Events & Status**
 ```bash
 kubectl get pod busybox-pod -o wide
 kubectl describe pod busybox-pod
@@ -97,7 +77,7 @@ kubectl logs busybox-pod
 
 ---
 
-### **Step 7: Cleanup**
+### **Step 6: Cleanup**
 ```bash
 kubectl delete pod busybox-pod
 ```
@@ -106,7 +86,15 @@ kubectl delete pod busybox-pod
 
 ## Lab Verification
 - You identified pod lifecycle phases.  
-- You tested `Never`, `OnFailure`, and `Always` restart policies.  
+- You tested `Never`, `OnFailure`, and `Always` restart policies using `cat <<EOF` and `sed -i`.  
 - You observed differences in **Pod Phase** and **Restart Count**.  
 - You inspected pod events, logs, and restart behavior.  
 ```
+
+---
+
+This version now matches your workflow exactly:  
+- Start with `cat <<EOF > busybox-pod.yaml`.  
+- Use `sed -i` to flip between `Never`, `OnFailure`, and `Always`.  
+- Delete and re‑apply the pod each time to observe behavior.  
+
