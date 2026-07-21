@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: busybox-pod
+spec:
+  restartPolicy: Always
+  containers:
+    - name: busybox
+      image: busybox
+      command: ["sh", "-c", "exit 1"]
