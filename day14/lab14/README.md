@@ -98,5 +98,5 @@ kubectl delete pod init-pod
 - You verified init container runs before the app container.  
 - You confirmed shared volume usage between init and app.  
 - You experimented with `sed -i` to change init behavior.  
-```
+
 
