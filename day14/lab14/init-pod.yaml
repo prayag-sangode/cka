@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: init-pod
+spec:
+  volumes:
+    - name: shared-data
+      emptyDir: {}
+  initContainers:
+    - name: init-writer
+      image: busybox
+      command: ["sh", "-c", "echo Pre-work done by Init > /data/init.txt"]
+      volumeMounts:
+        - name: shared-data
+          mountPath: /data
+  containers:
+    - name: app
+      image: busybox
+      command: ["sh", "-c", "cat /data/init.txt; sleep 3600"]
+      volumeMounts:
+        - name: shared-data
+          mountPath: /data
