@@ -72,16 +72,17 @@ kubectl logs sidecar-pod -c monitor
 
 ---
 
-### **Step 5: Exec into Each Container**
+### **Step 5: Exec into Each Container and check file contents**
 ```bash
-kubectl exec -it sidecar-pod -c app -- sh
-kubectl exec -it sidecar-pod -c log-collector -- sh
-kubectl exec -it sidecar-pod -c monitor -- sh
-```
+# App container: exec and check its log file
+kubectl exec -it sidecar-pod -c app -- sh -c "cat /var/log/app.log"
 
-Inside `monitor`:
-```bash
-cat /var/log/metrics.log
+# Log-collector container: exec and check tailed log file
+kubectl exec -it sidecar-pod -c log-collector -- sh -c "cat /var/log/app.log"
+
+# Monitor container: exec and check metrics file
+kubectl exec -it sidecar-pod -c monitor -- sh -c "cat /var/log/metrics.log"
+
 ```
 
 ---
