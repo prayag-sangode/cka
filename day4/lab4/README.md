@@ -82,6 +82,11 @@ kubectl get pods
 ```
 - Confirms workloads are isolated per cluster/context.
 
+### Delete 
+
+```
+kubectl config delete-context <cluster-name>
+```
 ---
 
 ## Lab Verification
