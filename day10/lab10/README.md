@@ -28,6 +28,8 @@ spec:
 
 Apply it:
 ```bash
+kubectl config set-context --current --namespace=default
+
 kubectl apply -f nginx-labeled.yaml
 kubectl get pods --show-labels
 ```
