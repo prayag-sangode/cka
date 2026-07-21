@@ -1,9 +1,17 @@
-## Fresh Sidecar Lab Workflow
+## Day 15 Lab — Implementing Sidecar Containers for Logging and Monitoring
 
-### **Step 1: Create Pod with App + Log Collector**
+### **Step 1: Understand Sidecar Pattern**
+- A **sidecar container** runs alongside the main application container in the same pod.  
+- Common use cases:
+  - Logging (collecting app logs).  
+  - Monitoring (metrics exporters).  
+  - Proxying (service mesh sidecars).  
+- Sidecars share volumes and network with the main container.
+
+---
+
+### **Step 2: Create Pod with App, Log Collector, and Monitor**
 ```bash
-cd ~/cka/day15/lab15
-
 cat <<EOF > sidecar-pod.yaml
 apiVersion: v1
 kind: Pod
@@ -20,9 +28,17 @@ spec:
       volumeMounts:
         - name: shared-logs
           mountPath: /var/log
+
     - name: log-collector
       image: busybox
       command: ["sh", "-c", "tail -f /var/log/app.log"]
+      volumeMounts:
+        - name: shared-logs
+          mountPath: /var/log
+
+    - name: monitor
+      image: busybox
+      command: ["sh", "-c", "while true; do echo Monitoring metrics >> /var/log/metrics.log; sleep 10; done"]
       volumeMounts:
         - name: shared-logs
           mountPath: /var/log
@@ -32,55 +48,53 @@ kubectl apply -f sidecar-pod.yaml
 kubectl get pods
 ```
 
+The **app** container writes logs into `/var/log/app.log`.  
+The **log-collector** sidecar tails the same file continuously.  
+The **monitor** sidecar writes metrics into `/var/log/metrics.log`.
+
 ---
 
-### **Step 2: Inspect Pod**
+### **Step 3: Inspect Pod Details**
 ```bash
 kubectl describe pod sidecar-pod
 ```
-- Confirms both containers are running.  
-- Shows shared `emptyDir` volume mounted at `/var/log`.
+- Shows all three containers (`app`, `log-collector`, `monitor`).  
+- Confirms shared `emptyDir` volume mounted at `/var/log`.
 
 ---
 
-### **Step 3: Check Logs per Container**
-```bash
-kubectl logs sidecar-pod -c app
-kubectl logs sidecar-pod -c log-collector
-```
-
----
-
-### **Step 4: Add Monitoring Sidecar**
-Now add a third container using `sed -i`. Make sure you’re inside the correct directory (`~/cka/day15/lab15`):
-
-```bash
-cd ~/cka/day15/lab15
-
-sed -i '/containers:/a \ \ \ - name: monitor\n      image: busybox\n      command: ["sh", "-c", "while true; do echo Monitoring metrics >> /var/log/metrics.log; sleep 10; done"]\n      volumeMounts:\n        - name: shared-logs\n          mountPath: /var/log' sidecar-pod.yaml
-
-kubectl delete pod sidecar-pod
-kubectl apply -f sidecar-pod.yaml
-kubectl get pods
-```
-
-👉 Now you have **app**, **log-collector**, and **monitor** containers all sharing the same volume.
-
----
-
-### **Step 5: Inspect All Containers**
+### **Step 4: Check Logs for Each Container**
 ```bash
 kubectl logs sidecar-pod -c app
 kubectl logs sidecar-pod -c log-collector
 kubectl logs sidecar-pod -c monitor
+```
 
+---
+
+### **Step 5: Exec into Each Container**
+```bash
+kubectl exec -it sidecar-pod -c app -- sh
+kubectl exec -it sidecar-pod -c log-collector -- sh
 kubectl exec -it sidecar-pod -c monitor -- sh
+```
+
+Inside `monitor`:
+```bash
 cat /var/log/metrics.log
 ```
 
 ---
 
-### **Step 6: Cleanup**
+### **Step 6: Inspect Pod Status JSON**
+```bash
+kubectl get pod sidecar-pod -o json | jq '.status.containerStatuses'
+```
+- Shows readiness, restart counts, and state for each container.
+
+---
+
+### **Step 7: Cleanup**
 ```bash
 kubectl delete pod sidecar-pod
 ```
@@ -88,8 +102,8 @@ kubectl delete pod sidecar-pod
 ---
 
 ## Lab Verification
-- You created a pod with **app + log collector**.  
-- You added a **monitoring sidecar** using `sed -i`.  
-- You verified logs and metrics across all containers with `-c`.  
-- You confirmed shared volume usage.  
-
+- You implemented a pod with **app**, **log-collector**, and **monitor** containers.  
+- You verified logs and metrics are shared via `emptyDir` volume.  
+- You checked logs for each container with `-c`.  
+- You exec’d into each container to confirm shared volume access.  
+- You inspected containerStatuses via JSON output.  
