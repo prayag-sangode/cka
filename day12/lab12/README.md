@@ -10,7 +10,7 @@ Pods go through these phases:
 
 Check pod phase:
 ```bash
-kubectl get pod demo-pod -o jsonpath='{.status.phase}'
+kubectl get pod busybox-pod -o jsonpath='{.status.phase}'
 ```
 
 ---
@@ -34,7 +34,12 @@ spec:
       image: busybox
       command: ["sh", "-c", "exit 1"]
 ```
+Check pod phase:
+```bash
+kubectl get pod busybox-pod -o jsonpath='{.status.phase}'
+```
 
+---
 ---
 
 ### **Step 3: Deploy and Observe Behavior**
