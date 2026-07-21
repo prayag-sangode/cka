@@ -36,49 +36,6 @@ spec:
       volumeMounts:
         - name: shared-data
           mountPath: /data
-EOF
-
-kubectl apply -f multi-pod.yaml
-kubectl get pods
-```
-
-The **writer** container writes a file into `/data/message.txt`.  
-The **reader** container reads the same file from the shared volume.
-
----
-
-### **Step 3: Inspect Pod Details**
-```bash
-kubectl describe pod multi-pod
-```
-- Check both containers are listed.  
-- Verify the `emptyDir` volume is mounted in both.
-
----
-
-### **Step 4: Verify Shared Volume Behavior**
-```bash
-kubectl exec -it multi-pod -c reader -- cat /data/message.txt
-```
-Output should be: `Hello from Writer`.
-
----
-
-### **Step 5: Experiment with Restart Policies**
-Change restart policy using `sed -i`:
-```bash
-sed -i 's/restartPolicy: Never/restartPolicy: OnFailure/' multi-pod.yaml
-kubectl delete pod multi-pod
-kubectl apply -f multi-pod.yaml
-```
-
-Observe how containers behave differently when one fails.
-
----
-
-### **Step 6: Add a Third Sidecar Container**
-```bash
-cat <<EOF >> multi-pod.yaml
     - name: logger
       image: busybox
       command: ["sh", "-c", "tail -f /data/message.txt"]
@@ -87,11 +44,51 @@ cat <<EOF >> multi-pod.yaml
           mountPath: /data
 EOF
 
-kubectl delete pod multi-pod
 kubectl apply -f multi-pod.yaml
+kubectl get pods
 ```
 
-Now you have **writer**, **reader**, and **logger** all sharing the same volume.
+---
+
+### **Step 3: Inspect Pod Details**
+```bash
+kubectl describe pod multi-pod
+```
+- Shows all 3 containers (`writer`, `reader`, `logger`).  
+- Verify the `emptyDir` volume is mounted in all.
+
+---
+
+### **Step 4: Check Logs for Each Container**
+```bash
+kubectl logs multi-pod -c writer
+kubectl logs multi-pod -c reader
+kubectl logs multi-pod -c logger
+```
+- `writer` → writes `Hello from Writer`.  
+- `reader` → prints the file contents.  
+- `logger` → tails the file continuously.
+
+---
+
+### **Step 5: Exec into Each Container**
+```bash
+kubectl exec -it multi-pod -c writer -- sh
+kubectl exec -it multi-pod -c reader -- sh
+kubectl exec -it multi-pod -c logger -- sh
+```
+- From inside any container, check shared volume:
+```bash
+cat /data/message.txt
+```
+
+---
+
+### **Step 6: Inspect Pod Status JSON**
+```bash
+kubectl get pod multi-pod -o json | jq '.status.containerStatuses'
+```
+- Shows readiness, restart counts, and state for each container.
 
 ---
 
@@ -105,6 +102,7 @@ kubectl delete pod multi-pod
 ## Lab Verification
 - You created a multi‑container pod with a shared `emptyDir` volume.  
 - You verified containers can read/write to the same file.  
-- You experimented with restart policies using `sed -i`.  
-- You extended the pod with a sidecar container.  
+- You checked logs for each container with `-c`.  
+- You exec’d into each container to confirm shared volume access.  
+- You inspected containerStatuses via JSON output.  
 
