@@ -40,8 +40,8 @@ kubectl apply -f sidecar-pod.yaml
 kubectl get pods
 ```
 
-👉 The **app** container writes logs into `/var/log/app.log`.  
-👉 The **log-collector** sidecar tails the same file continuously.
+The **app** container writes logs into `/var/log/app.log`.  
+The **log-collector** sidecar tails the same file continuously.
 
 ---
 
@@ -59,8 +59,6 @@ kubectl describe pod sidecar-pod
 kubectl logs sidecar-pod -c app
 kubectl logs sidecar-pod -c log-collector
 ```
-- `app` → shows log entries being written.  
-- `log-collector` → shows the tailed log output.
 
 ---
 
@@ -73,8 +71,7 @@ kubectl exec -it sidecar-pod -c log-collector -- sh
 
 ---
 
-### **Step 6: Experiment with Monitoring Sidecar**
-Modify manifest using `sed -i` to add a monitoring sidecar:
+### **Step 6: Add Monitoring Sidecar**
 ```bash
 sed -i '/containers:/a \ \ \ - name: monitor\n      image: busybox\n      command: ["sh", "-c", "while true; do echo Monitoring metrics >> /var/log/metrics.log; sleep 10; done"]\n      volumeMounts:\n        - name: shared-logs\n          mountPath: /var/log' sidecar-pod.yaml
 
@@ -82,7 +79,7 @@ kubectl delete pod sidecar-pod
 kubectl apply -f sidecar-pod.yaml
 ```
 
-👉 Now you have **app**, **log-collector**, and **monitor** containers all sharing the same volume.
+Now you have **app**, **log-collector**, and **monitor** containers all sharing the same volume.
 
 ---
 
